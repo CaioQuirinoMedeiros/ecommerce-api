@@ -6,7 +6,7 @@ const Role = use('Role')
 
 class AuthController {
   async register({ request, response }) {
-    const trx = Database.beginTransaction()
+    const trx = await Database.beginTransaction()
 
     try {
       const { name, surname, email, password } = request.all()
@@ -19,7 +19,7 @@ class AuthController {
 
       await trx.commit()
 
-      return user
+      return response.status(201).send({ data: user })
     } catch (err) {
       await trx.rollback()
 
@@ -32,7 +32,7 @@ class AuthController {
 
     const token = await auth.withRefreshToken().attempt(email, password)
 
-    return token
+    return response.send({ data: token })
   }
 
   async refresh({ request, response, auth }) {
@@ -46,7 +46,7 @@ class AuthController {
       .newRefreshToken()
       .generateForRefreshToken(refresh_token)
 
-    return user
+    return response.send({ data: user })
   }
 
   async logout({ request, response, auth }) {
@@ -56,7 +56,7 @@ class AuthController {
       refresh_token = request.header('refresh_token')
     }
 
-    await auth.authentication('jwt').revoke(['refresh_token'], true)
+    await auth.authenticator('jwt').revokeTokens(['refresh_token'], true)
 
     return response.status(204).send({})
   }
