@@ -23,7 +23,7 @@ class RoleSeeder {
     await Role.create({
       name: 'Manager',
       slug: 'manager',
-      description: 'Gerento da loja'
+      description: 'Gerente da loja'
     })
 
     await Role.create({
