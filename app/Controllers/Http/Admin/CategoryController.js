@@ -45,6 +45,23 @@ class CategoryController {
 
     return response.status(204).send()
   }
+
+  async update({ params, request, response }) {
+    try {
+      const { title, description, image_id } = request.all()
+      const category = await Category.findOrFail(params.id)
+
+      category.merge({ title, description, image_id })
+
+      await category.save()
+
+      return response.status(201).send(category)
+    } catch (err) {
+      return response
+        .status(400)
+        .send({ message: 'Erro ao processar solicitação' })
+    }
+  }
 }
 
 module.exports = CategoryController
