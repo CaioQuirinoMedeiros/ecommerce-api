@@ -42,7 +42,13 @@ class UserController {
     try {
       const { name, surname, email, password, image_id } = request.all()
 
-      const user = User.create({ name, surname, email, password, image_id })
+      const user = await User.create({
+        name,
+        surname,
+        email,
+        password,
+        image_id
+      })
 
       return response.status(201).send(user)
     } catch (err) {
