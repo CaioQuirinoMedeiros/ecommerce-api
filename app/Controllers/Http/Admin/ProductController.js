@@ -1,5 +1,8 @@
 'use strict'
 
+/** @typedef {import('@adonisjs/framework/src/Request')} Request */
+/** @typedef {import('@adonisjs/framework/src/Response')} Response */
+
 const Product = use('App/Models/Product')
 
 class ProductController {
@@ -50,8 +53,8 @@ class ProductController {
 
   /**
    * @param {object} ctx
-   * @param {Request} ctx.request
    * @param {Params} ctx.params
+   * @param {Response} ctx.response
    */
   async show({ params, response }) {
     const product = await Product.findOrFail(params.id)

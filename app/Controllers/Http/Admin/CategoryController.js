@@ -1,5 +1,8 @@
 'use strict'
 
+/** @typedef {import('@adonisjs/framework/src/Request')} Request */
+/** @typedef {import('@adonisjs/framework/src/Response')} Response */
+
 const Category = use('App/Models/Category')
 
 class CategoryController {
