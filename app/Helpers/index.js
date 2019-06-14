@@ -6,17 +6,16 @@ const Helpers = use('Helpers')
 /**
  * Generate random string
  *
- * @param {int} length - Tamanho da string
- * @return {string} String randomica de tamanho length
+ * @param {int} length - String length
  */
 const randomString = async (length = 40) => {
   let string = ''
   let len = string.length
 
-  if (len <= length) {
+  if (len < length) {
     let size = length - len
     let bytes = await crypto.randomBytes(size)
-    let buffer = new Buffer(bytes)
+    let buffer = Buffer.from(bytes)
     string += buffer
       .toString('base64')
       .replace(/[^a-zA-z0-9]/g, '')
@@ -25,5 +24,11 @@ const randomString = async (length = 40) => {
 
   return string
 }
+
+/**
+ * Move a single file to a specified path, if no path is specified
+ * then 'public/uploads' will be used
+ * @param {FileJar} file
+ */
 
 module.exports = { randomString }
