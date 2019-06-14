@@ -8,7 +8,7 @@ const Helpers = use('Helpers')
  *
  * @param {int} length - String length
  */
-const randomString = async (length = 40) => {
+const random_string = async (length = 40) => {
   let string = ''
   let len = string.length
 
@@ -28,7 +28,9 @@ const randomString = async (length = 40) => {
 /**
  * Move a single file to a specified path, if no path is specified
  * then 'public/uploads' will be used
- * @param {FileJar} file
+ * @param {FileJar} file the file to be managed
+ * @param {string} path the path where the file should be moved in
  */
+const manage_single_upload = async (file, path = null) => {}
 
 module.exports = { randomString }
