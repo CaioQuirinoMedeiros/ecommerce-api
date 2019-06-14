@@ -46,9 +46,15 @@ class ProductController {
   async destroy({ params, response }) {
     const product = await Product.findOrFail(params.id)
 
-    await product.delete()
+    try {
+      await product.delete()
 
-    return response.status(204).send()
+      return response.status(204).send()
+    } catch (err) {
+      return response
+        .status(500)
+        .send({ message: 'Não foi possível deletar o produto' })
+    }
   }
 
   async update({ params, request, response }) {
