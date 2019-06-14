@@ -5,7 +5,10 @@
 
 const Order = use('App/Models/Order')
 const Databse = use('Database')
-const Service = use('App/Services/Order/OrderService')
+const OrderService = use('App/Services/Order/OrderService')
+
+const Cupon = use('App/Models/Cupon')
+const Discount = use('App/Models/Discount')
 
 class OrderController {
   /**
@@ -97,7 +100,7 @@ class OrderController {
 
       order.merge({ user_id, status })
 
-      const service = new Service(order, trx)
+      const service = new OrderService(order, trx)
 
       await service.updateItems(items)
 
@@ -139,6 +142,61 @@ class OrderController {
       return response
         .status(500)
         .send({ message: 'Não foi possível deletar o pedido' })
+    }
+  }
+
+  async applyDiscount({ params, request, response }) {
+    const code = request.input('code')
+
+    const cupon = await Cupon.findByOrFail('code', code.toUpperCase())
+
+    const order = await Order.findOrFail(params.id)
+
+    let discount,
+      info = {}
+
+    try {
+      const service = new OrderService(order)
+
+      const canAddDiscount = service.canApplyDiscount(cupon)
+
+      const orderDiscounts = await order.cupons().getCount()
+
+      const canApplyToOrder =
+        orderDiscounts < 1 || (orderDiscounts >= 1 && cupon.recursive)
+
+      if (canAddDiscount && canApplyToOrder) {
+        discount = await Discount.findOrCreate({
+          order_id: order.id,
+          cupon_id: cupon.id
+        })
+
+        info.message = 'Cupon aplicado com sucesso'
+        info.success = true
+      }
+
+      return response.status(200).send({ order, info })
+    } catch (err) {
+      info.message = 'Não foi possível aplicar esse cupon'
+      info.success = false
+
+      return response.status(400).send(info)
+    }
+  }
+
+  async removeDiscount({ request, response }) {
+    const { discount_id } = request.all()
+
+    try {
+      const discount = await Discount.findOrFail(discount_id)
+
+      await discount.delete()
+
+      return response.status(204).send()
+    } catch (err) {
+      return response
+        .status(500)
+        .send({ message: 'Não foi possível remover o desconto' })
     }
   }
 }
