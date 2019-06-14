@@ -42,6 +42,8 @@ const manage_single_upload = async (file, path = null) => {
   await file.move(path, {
     name: filename
   })
+
+  return file
 }
 
 /**
@@ -74,7 +76,7 @@ const manage_multiple_files = async (fileJar, path = null) => {
     })
   )
 
-  return { success, errors }
+  return { successes, errors }
 }
 
 module.exports = { randomString, manage_single_upload, manage_multiple_files }
