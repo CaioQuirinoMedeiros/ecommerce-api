@@ -3,6 +3,12 @@
 const Product = use('App/Models/Product')
 
 class ProductController {
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   * @param {Pagination} ctx.pagination
+   */
   async index({ request, response, pagination }) {
     const name = request.input('name')
     const { page, limit } = pagination
@@ -18,6 +24,11 @@ class ProductController {
     return response.status(200).send(products)
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
   async store({ request, response }) {
     try {
       const { name, description, price, image_id } = request.all()
@@ -37,12 +48,24 @@ class ProductController {
     }
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Params} ctx.params
+   */
   async show({ params, response }) {
     const product = await Product.findOrFail(params.id)
+
+    await product.load('categories')
 
     return response.send(product)
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Params} ctx.params
+   */
   async destroy({ params, response }) {
     const product = await Product.findOrFail(params.id)
 
@@ -57,6 +80,12 @@ class ProductController {
     }
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   * @param {Params} ctx.params
+   */
   async update({ params, request, response }) {
     try {
       const { name, description, price, image_id } = request.all()

@@ -4,89 +4,106 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
+const User = use('App/Models/User')
+
 /**
  * Resourceful controller for interacting with users
  */
 class UserController {
   /**
-   * Show a list of all users.
-   * GET users
-   *
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
+   * @param {Pagination} ctx.pagination
    */
-  async index ({ request, response, view }) {
+  async index({ request, response, pagination }) {
+    const name = request.input('name')
+    const { page, limit } = pagination
+
+    const query = User.query()
+
+    if (name) {
+      query.where('name', 'iLIKE', `%${name}%`)
+      query.orWhere('surname', 'iLIKE', `%${name}%`)
+      query.orWhere('email', 'iLIKE', `%${name}%`)
+    }
+
+    const users = await query.paginate(page, limit)
+
+    return response.send(users)
   }
 
   /**
-   * Render a form to be used for creating a new user.
-   * GET users/create
-   *
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
    */
-  async create ({ request, response, view }) {
+  async store({ request, response }) {
+    try {
+      const { name, surname, email, password, image_id } = request.all()
+
+      const user = User.create({ name, surname, email, password, image_id })
+
+      return response.status(201).send(user)
+    } catch (err) {
+      return response
+        .status(400)
+        .send({ message: 'Erro ao processar solicitação' })
+    }
   }
 
   /**
-   * Create/save a new user.
-   * POST users
-   *
    * @param {object} ctx
-   * @param {Request} ctx.request
+   * @param {Params} ctx.params
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async show({ params, response }) {
+    const user = await User.findOrFail(params.id)
+
+    await user.load('image')
+
+    return response.send(user)
   }
 
   /**
-   * Display a single user.
-   * GET users/:id
-   *
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
+   * @param {Params} ctx.params
    */
-  async show ({ params, request, response, view }) {
+  async update({ params, request, response }) {
+    try {
+      const { name, surname, email, password, image_id } = request.all()
+      const user = await User.findOrFail(params.id)
+
+      user.merge({ name, surname, email, password, image_id })
+
+      await user.save()
+
+      return response.status(201).send(user)
+    } catch (err) {
+      return response
+        .status(400)
+        .send({ message: 'Erro ao processar solicitação' })
+    }
   }
 
   /**
-   * Render a form to update an existing user.
-   * GET users/:id/edit
-   *
    * @param {object} ctx
-   * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
    */
-  async edit ({ params, request, response, view }) {
-  }
+  async destroy({ params, response }) {
+    const user = await User.findOrFail(params.id)
 
-  /**
-   * Update user details.
-   * PUT or PATCH users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async update ({ params, request, response }) {
-  }
+    try {
+      await user.delete()
 
-  /**
-   * Delete a user with id.
-   * DELETE users/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async destroy ({ params, request, response }) {
+      return response.status(204).send()
+    } catch (err) {
+      return response
+        .status(500)
+        .send({ message: 'Não foi possível deletar o produto' })
+    }
   }
 }
 

@@ -3,6 +3,12 @@
 const Category = use('App/Models/Category')
 
 class CategoryController {
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   * @param {Pagination} ctx.pagination
+   */
   async index({ request, response, pagination }) {
     const title = request.input('title')
     const { page, limit } = pagination
@@ -18,6 +24,11 @@ class CategoryController {
     return response.status(200).send(categories)
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   */
   async store({ request, response }) {
     try {
       const { title, description, image_id } = request.all()
@@ -32,12 +43,24 @@ class CategoryController {
     }
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Params} ctx.params
+   * @param {Response} ctx.response
+   */
   async show({ params, response }) {
     const category = await Category.findOrFail(params.id)
+
+    await category.load('products')
 
     return response.send(category)
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Params} ctx.params
+   * @param {Response} ctx.response
+   */
   async destroy({ params, response }) {
     const category = await Category.findOrFail(params.id)
 
@@ -52,6 +75,12 @@ class CategoryController {
     }
   }
 
+  /**
+   * @param {object} ctx
+   * @param {Request} ctx.request
+   * @param {Response} ctx.response
+   * @param {Params} ctx.params
+   */
   async update({ params, request, response }) {
     try {
       const { title, description, image_id } = request.all()
