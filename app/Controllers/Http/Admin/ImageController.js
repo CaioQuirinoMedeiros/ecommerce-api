@@ -4,13 +4,14 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 
 const Image = use('App/Models/Image')
-const {manage_single_upload, manage_multiple_upload} = use("App/Helpers")
+const { manage_single_upload, manage_multiple_upload } = use('App/Helpers')
 const fs = use('fs')
 
 class ImageController {
   /**
    * @param {object} ctx
    * @param {Response} ctx.response
+   * @param {object} ctx.pagination
    */
   async index({ response, pagination }) {
     const { page, limit } = pagination
@@ -34,7 +35,7 @@ class ImageController {
         size: '2mb'
       })
 
-      let images = [],
+      let images = []
 
       if (!fileJar.files) {
         const file = await manage_single_upload(fileJar)
@@ -49,29 +50,36 @@ class ImageController {
 
           images.push(image)
 
-          return response.status(201).send({successes: images, erros: []})
+          return response.status(201).send({ successes: images, errors: [] })
         }
 
-        return response.status(400).send({message: "Não foi possível processar a imagem"})
+        return response
+          .status(400)
+          .send({ message: 'Não foi possível processar a imagem' })
       }
 
       let files = await manage_multiple_upload(fileJar)
 
-      await Promise.all(files.successes.map(async file => {
-        const image = await Image.create({
-          path: file.fileName,
-          size: file.size,
-          original_name: file.clientName,
-          extension: file.subtype
+      await Promise.all(
+        files.successes.map(async file => {
+          const image = await Image.create({
+            path: file.fileName,
+            size: file.size,
+            original_name: file.clientName,
+            extension: file.subtype
+          })
+
+          images.push(image)
         })
+      )
 
-        images.push(image)
-      }))
-
-      return response.status(201).send({successes: images, erros: files.erros})
-
+      return response
+        .status(201)
+        .send({ successes: images, errors: files.errors })
     } catch (err) {
-      return response.status(400).send({message: "Não foi possível processar a solicitação"})
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível processar a solicitação' })
     }
   }
 
@@ -98,23 +106,24 @@ class ImageController {
     try {
       const original_name = request.input('original_name')
 
-      image.merge(original_name)
+      image.merge({ original_name })
 
       await image.save()
 
       return response.status(200).send(image)
     } catch (err) {
-      return response.status(400).send({message: "Não foi possível atualizar a imagem"})
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível atualizar a imagem' })
     }
   }
 
   /**
    * @param {object} ctx
-   * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {object} ctx.params
    */
-  async destroy({ params, request, response }) {
+  async destroy({ params, response }) {
     const image = Image.findOrFail(params.id)
 
     try {
@@ -122,13 +131,15 @@ class ImageController {
 
       let filePath = Helpers.publicPath(`uploads/${image.path}`)
 
-      await fs.unlink(filePath, err => {
+      await fs.unlink(filePath, async err => {
         if (!err) await image.delete()
       })
 
       return response.status(204).send()
     } catch (err) {
-      return response.status(500).send({message: "Não foi possível deletar a imagem"})
+      return response
+        .status(500)
+        .send({ message: 'Não foi possível deletar a imagem' })
     }
   }
 }
