@@ -53,11 +53,11 @@ const manage_single_upload = async (file, path = null) => {
  * @param {string} path the path where the file should be moved in
  * @return {Object}
  */
-const manage_multiple_files = async (fileJar, path = null) => {
+const manage_multiple_upload = async (fileJar, path = null) => {
   path = path ? path : Helpers.publicPath('uploads')
 
-  let success = []
-  let erros = []
+  let successes = []
+  let errors = []
 
   await Promise.all(
     fileJar.files.map(async file => {
@@ -69,9 +69,9 @@ const manage_multiple_files = async (fileJar, path = null) => {
       })
 
       if (file.moved()) {
-        success.push(file)
+        successes.push(file)
       } else {
-        erros.push(file.error())
+        errors.push(file.error())
       }
     })
   )
@@ -79,4 +79,4 @@ const manage_multiple_files = async (fileJar, path = null) => {
   return { successes, errors }
 }
 
-module.exports = { randomString, manage_single_upload, manage_multiple_files }
+module.exports = { random_string, manage_single_upload, manage_multiple_upload }
