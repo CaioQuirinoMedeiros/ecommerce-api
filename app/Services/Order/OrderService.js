@@ -33,6 +33,12 @@ class OrderService {
   }
 
   async canApplyDiscount(cupon) {
+    const now = new Date().getTime()
+
+    if (now < cupon.valid_from.getTime()) return false
+    if (cupon.valid_until.getTime() && now > cupon.valid_until.getTime())
+      return false
+
     const cuponProductsIds = await Database.from('cupon_products')
       .where('cupon_id', cupon.id)
       .pluck('product_id')
