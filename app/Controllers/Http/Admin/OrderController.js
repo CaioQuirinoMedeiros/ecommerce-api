@@ -45,12 +45,14 @@ class OrderController {
     try {
       const { user_id, items, status } = request.all()
 
-      const order = await Order.create({
-        user_id,
-        items,
-        status,
+      const order = await Order.create(
+        {
+          user_id,
+          items,
+          status
+        },
         trx
-      })
+      )
 
       const service = new Service(order, trx)
 
