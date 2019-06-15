@@ -23,4 +23,6 @@ hooks.after.providersBooted(() => {
       throw message
     }
   }
+
+  Validator.extend('exists', existsFn)
 })
