@@ -1,9 +1,9 @@
-const { hooks } = require('@adonisjs/fold')
-
-const Validator = use('Validator')
-const Database = use('Database')
+const { hooks } = require('@adonisjs/ignitor')
 
 hooks.after.providersBooted(() => {
+  const Validator = use('Validator')
+  const Database = use('Database')
+
   const existsFn = async (data, field, message, args, get) => {
     const value = get(data, field)
     if (!value) {
