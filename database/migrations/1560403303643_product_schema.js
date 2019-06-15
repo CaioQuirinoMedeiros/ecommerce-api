@@ -10,7 +10,7 @@ class ProductSchema extends Schema {
       table.string('name', 200).notNullable()
       table.integer('image_id').unsigned()
       table.text('description')
-      table.decimal('price', 12, 2)
+      table.decimal('price', 12, 2).unsigned()
       table.timestamps()
 
       table
