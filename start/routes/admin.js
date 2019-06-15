@@ -18,7 +18,11 @@ Route.group(() => {
   /**
    * Products resource routes
    */
-  Route.resource('products', 'ProductController').apiOnly()
+  Route.resource('products', 'ProductController')
+    .apiOnly()
+    .validator(
+      new Map([[['products.store', 'products.update'], ['Admin/StoreProduct']]])
+    )
 
   /**
    * Cupons resource routes
