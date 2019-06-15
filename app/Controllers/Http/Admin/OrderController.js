@@ -4,7 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 
 const Order = use('App/Models/Order')
-const Databse = use('Database')
+const Database = use('Database')
 const OrderService = use('App/Services/Order/OrderService')
 
 const Cupon = use('App/Models/Cupon')
@@ -48,13 +48,12 @@ class OrderController {
       const order = await Order.create(
         {
           user_id,
-          items,
           status
         },
         trx
       )
 
-      const service = new Service(order, trx)
+      const service = new OrderService(order, trx)
 
       if (items && items.length) {
         await service.syncItems(items)
