@@ -4,6 +4,7 @@ const DiscountHook = (exports = module.exports = {})
 
 const Cupon = use('App/Models/Cupon')
 const Order = use('App/Models/Order')
+const Database = use('Database')
 
 DiscountHook.calculateValues = async model => {
   let cuponProductsIds,
