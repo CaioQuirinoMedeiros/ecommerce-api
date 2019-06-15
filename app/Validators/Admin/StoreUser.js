@@ -7,15 +7,15 @@ class AdminStoreUser {
 
   get rules() {
     let userID = this.ctx.params.id
-    let rule = ''
+    let emailRule = ''
 
     if (userID) {
-      rule = `unique:users,email,id,${userID}`
+      emailRule = `email|unique:users,email,id,${userID}`
     } else {
-      rule = 'unique:users,email|required'
+      emailRule = 'email|unique:users,email|required'
     }
     return {
-      email: rule,
+      email: emailRule,
       image_id: 'exists:images,id'
     }
   }
@@ -23,8 +23,9 @@ class AdminStoreUser {
   get messages() {
     return {
       'email.unique': 'Este email já existe!',
-      'email.required': 'O email é obrigatório',
-      'image_id.exists': 'A imagem não existe'
+      'email.required': 'O email é obrigatório!',
+      'email.email': 'O email é inválido!',
+      'image_id.exists': 'A imagem não existe!'
     }
   }
 }
