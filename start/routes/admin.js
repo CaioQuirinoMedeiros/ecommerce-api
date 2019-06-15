@@ -10,7 +10,9 @@ Route.group(() => {
   Route.resource('categories', 'CategoryController')
     .apiOnly()
     .validator(
-      new Map([[['categories.store', 'categories.update'], ['Admin/Category']]])
+      new Map([
+        [['categories.store', 'categories.update'], ['Admin/StoreCategory']]
+      ])
     )
 
   /**
@@ -40,7 +42,11 @@ Route.group(() => {
   /**
    * User resource routes
    */
-  Route.resource('users', 'UserController').apiOnly()
+  Route.resource('users', 'UserController')
+    .apiOnly()
+    .validator(
+      new Map([[['users.store', 'users.update'], ['Admin/StoreUser']]])
+    )
 })
   .prefix('v1/admin')
   .namespace('Admin')
