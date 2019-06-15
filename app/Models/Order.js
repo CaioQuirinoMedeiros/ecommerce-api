@@ -11,7 +11,7 @@ class Order extends Model {
     this.addHook('afterPaginate', 'OrderHook.updateCollectionValues')
   }
   items() {
-    return this.hasMany('App/Models/Item')
+    return this.hasMany('App/Models/OrderItem')
   }
 
   cupons() {
