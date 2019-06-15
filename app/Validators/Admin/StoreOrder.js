@@ -14,8 +14,8 @@ class StoreOrder {
 
   get messages() {
     return {
-      'items.*.product_id.exists': 'O produto não existe',
-      'items.*.quantity.min': 'A quantidade mínima é 1'
+      'items.*.product_id.exists': 'O produto não existe!',
+      'items.*.quantity.min': 'A quantidade mínima é 1!'
     }
   }
 }
