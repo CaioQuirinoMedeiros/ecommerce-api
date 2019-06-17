@@ -4,6 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 
 const User = use('App/Models/User')
+const UserTransformer = use('App/Transformers/Admin/User')
 
 class UserController {
   /**
@@ -12,7 +13,7 @@ class UserController {
    * @param {Response} ctx.response
    * @param {Pagination} ctx.pagination
    */
-  async index({ request, response, pagination }) {
+  async index({ request, response, pagination, transform }) {
     const name = request.input('name')
     const { page, limit } = pagination
 
@@ -24,7 +25,9 @@ class UserController {
       query.orWhere('email', 'iLIKE', `%${name}%`)
     }
 
-    const users = await query.paginate(page, limit)
+    let users = await query.paginate(page, limit)
+
+    users = await transform.paginate(users, UserTransformer)
 
     return response.send(users)
   }
@@ -34,17 +37,19 @@ class UserController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     try {
       const { name, surname, email, password, image_id } = request.all()
 
-      const user = await User.create({
+      let user = await User.create({
         name,
         surname,
         email,
         password,
         image_id
       })
+
+      user = await transform.item(user, UserTransformer)
 
       return response.status(201).send(user)
     } catch (err) {
@@ -59,10 +64,10 @@ class UserController {
    * @param {Params} ctx.params
    * @param {Response} ctx.response
    */
-  async show({ params, response }) {
-    const user = await User.findOrFail(params.id)
+  async show({ params, response, transform }) {
+    let user = await User.findOrFail(params.id)
 
-    await user.load('image')
+    user = await transform.item(user, UserTransformer)
 
     return response.send(user)
   }
@@ -73,14 +78,16 @@ class UserController {
    * @param {Response} ctx.response
    * @param {Params} ctx.params
    */
-  async update({ params, request, response }) {
+  async update({ params, request, response, transform }) {
     try {
       const { name, surname, email, password, image_id } = request.all()
-      const user = await User.findOrFail(params.id)
+      let user = await User.findOrFail(params.id)
 
       user.merge({ name, surname, email, password, image_id })
 
       await user.save()
+
+      user = await transform.item(user, UserTransformer)
 
       return response.status(201).send(user)
     } catch (err) {

@@ -12,14 +12,14 @@ class ImageTransformer extends BumblebeeTransformer {
   /**
    * This method is used to transform the data.
    */
-  transform(model) {
-    model = model.toJSON()
+  transform(image) {
+    image = image.toJSON()
     return {
-      id: model.id,
-      url: model.url,
-      size: model.size,
-      original_name: model.original_name,
-      extension: model.extension
+      id: image.id,
+      url: image.url,
+      size: image.size,
+      original_name: image.original_name,
+      extension: image.extension
     }
   }
 }
