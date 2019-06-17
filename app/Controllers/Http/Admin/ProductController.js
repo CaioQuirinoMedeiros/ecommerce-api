@@ -4,6 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 
 const Product = use('App/Models/Product')
+const ProductTransformer = use('App/Transformers/Admin/ProductTransformer')
 
 class ProductController {
   /**
@@ -12,7 +13,7 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {Pagination} ctx.pagination
    */
-  async index({ request, response, pagination }) {
+  async index({ request, response, pagination, transform }) {
     const name = request.input('name')
     const { page, limit } = pagination
 
@@ -22,7 +23,9 @@ class ProductController {
       query.where('name', 'iLIKE', `%${name}%`)
     }
 
-    const products = await query.paginate(page, limit)
+    let products = await query.paginate(page, limit)
+
+    products = await transform.paginate(products, ProductTransformer)
 
     return response.status(200).send(products)
   }
@@ -32,16 +35,18 @@ class ProductController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     try {
       const { name, description, price, image_id } = request.all()
 
-      const product = await Product.create({
+      let product = await Product.create({
         name,
         description,
         price,
         image_id
       })
+
+      product = await transform.item(product, ProductTransformer)
 
       return response.status(201).send({ product })
     } catch (err) {
@@ -56,10 +61,10 @@ class ProductController {
    * @param {Params} ctx.params
    * @param {Response} ctx.response
    */
-  async show({ params, response }) {
-    const product = await Product.findOrFail(params.id)
+  async show({ params, response, transform }) {
+    let product = await Product.findOrFail(params.id)
 
-    await product.load('categories')
+    product = await transform.item(product, ProductTransformer)
 
     return response.send(product)
   }
@@ -89,14 +94,16 @@ class ProductController {
    * @param {Response} ctx.response
    * @param {Params} ctx.params
    */
-  async update({ params, request, response }) {
+  async update({ params, request, response, transform }) {
     try {
       const { name, description, price, image_id } = request.all()
-      const product = await Product.findOrFail(params.id)
+      let product = await Product.findOrFail(params.id)
 
       product.merge({ name, description, price, image_id })
 
       await product.save()
+
+      product = await transform.item(product, ProductTransformer)
 
       return response.status(201).send(product)
     } catch (err) {
