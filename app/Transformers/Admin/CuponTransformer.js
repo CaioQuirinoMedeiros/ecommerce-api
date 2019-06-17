@@ -19,22 +19,26 @@ class CuponTransformer extends BumblebeeTransformer {
    * This method is used to transform the data.
    */
   transform(cupon) {
-    cupon = cupon.toJSON()
-    delete cupon.created_at
-    delete cupon.updated_at
-
-    return cupon
+    return {
+      id: cupon.id,
+      code: cupon.code,
+      discount: cupon.discount,
+      quantity: cupon.quantity,
+      type: cupon.type,
+      can_use_for: cupon.can_use_for,
+      recursive: cupon.recursive
+    }
   }
 
   includeUsers(cupon) {
     return this.collection(cupon.getRelated('users'), UserTransformer)
   }
 
-  includeUsers(cupon) {
+  includeProducts(cupon) {
     return this.collection(cupon.getRelated('products'), ProductTransformer)
   }
 
-  includeUsers(cupon) {
+  includeOrders(cupon) {
     return this.collection(cupon.getRelated('orders'), OrderTransformer)
   }
 }

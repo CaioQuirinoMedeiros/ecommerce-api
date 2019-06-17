@@ -58,21 +58,22 @@ class CuponController {
         'recursive'
       ])
 
+      let cupon = await Cupon.create({ ...cuponData, can_use_for }, trx)
+
       const { users, products } = request.only(['users', 'products'])
 
-      const service = new Service(Cupon, trx)
+      const service = new Service(cupon, trx)
 
       if (products && products.length) {
         await service.syncProducts(products)
-        can_use_for = 'product'
+        cupon.can_use_for = 'product'
       }
 
       if (users && users.length) {
         await service.syncUsers(users)
-        can_use_for = can_use_for === 'product' ? 'product_client' : 'client'
+        cupon.can_use_for =
+          cupon.can_use_for === 'product' ? 'product_client' : 'client'
       }
-
-      let cupon = await Cupon.create({ ...cuponData, can_use_for }, trx)
 
       await trx.commit()
 
@@ -83,10 +84,10 @@ class CuponController {
       return response.status(201).send(cupon)
     } catch (err) {
       await trx.rollback()
+      console.log(err)
 
-      return response
-        .status(400)
-        .send({ message: 'Não foi possível criar o cupon' })
+      return response.status(400).send({ err })
+      // .send({ message: 'Não foi possível criar o cupon' })
     }
   }
 
