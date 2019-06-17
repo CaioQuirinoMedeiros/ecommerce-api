@@ -5,7 +5,7 @@
 
 const Cupon = use('App/Models/Cupon')
 const Database = use('Database')
-const Service = use('App/Services/Cupon/CuponService')
+const CuponService = use('App/Services/Cupon/CuponService')
 
 const CuponTransformer = use('App/Transformers/Admin/CuponTransformer')
 
@@ -69,7 +69,7 @@ class CuponController {
 
       const { users, products } = request.only(['users', 'products'])
 
-      const service = new Service(cupon, trx)
+      const service = new CuponService(cupon, trx)
 
       if (products && products.length) {
         const productsAdded = await service.syncProducts(products)
@@ -86,6 +86,8 @@ class CuponController {
       await cupon.save(trx)
 
       await trx.commit()
+
+      cupon = await Cupon.find(cupon.id)
 
       cupon = await transform
         .include('users,products')
@@ -116,7 +118,6 @@ class CuponController {
 
       return response.send(cupon)
     } catch (err) {
-      console.log(err)
       return response
         .status(400)
         .send({ message: 'Não foi possível encontrar o cupon' })
@@ -149,7 +150,7 @@ class CuponController {
 
       const { users, products } = request.only(['users', 'products'])
 
-      const service = new Service(cupon, trx)
+      const service = new CuponService(cupon, trx)
 
       if (products && products.length) {
         const productsAdded = await service.syncProducts(products)
@@ -177,7 +178,6 @@ class CuponController {
 
       return response.status(200).send(cupon)
     } catch (err) {
-      console.log(err)
       await trx.rollback()
 
       return response
