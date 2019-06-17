@@ -43,7 +43,7 @@ class CategoryController {
       let category = await Category.create({ title, description, image_id })
       category = await transform.item(category, CategoryTransformer)
 
-      return response.status(201).send({ category })
+      return response.status(201).send(category)
     } catch (err) {
       return response
         .status(400)

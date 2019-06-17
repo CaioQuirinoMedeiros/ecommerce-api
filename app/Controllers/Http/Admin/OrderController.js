@@ -29,9 +29,7 @@ class OrderController {
       query.where('status', status)
     }
 
-    let orders = await Order.query()
-      .orderBy('id', 'DESC')
-      .paginate(page, limit)
+    let orders = await query.paginate(page, limit)
 
     orders = await transform.paginate(orders, OrderTransformer)
 
@@ -65,7 +63,11 @@ class OrderController {
 
       await trx.commit()
 
-      order = await transform.item(order, OrderTransformer)
+      order = await Order.find(order.id)
+
+      order = await transform
+        .include('user,items')
+        .item(order, OrderTransformer)
 
       return response.status(201).send(order)
     } catch (err) {

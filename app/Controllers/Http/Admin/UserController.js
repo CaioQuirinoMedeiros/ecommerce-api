@@ -4,7 +4,7 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 
 const User = use('App/Models/User')
-const UserTransformer = use('App/Transformers/Admin/User')
+const UserTransformer = use('App/Transformers/Admin/UserTransformer')
 
 class UserController {
   /**

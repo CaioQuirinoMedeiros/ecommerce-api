@@ -48,7 +48,7 @@ class ProductController {
 
       product = await transform.item(product, ProductTransformer)
 
-      return response.status(201).send({ product })
+      return response.status(201).send(product)
     } catch (err) {
       return response
         .status(400)
