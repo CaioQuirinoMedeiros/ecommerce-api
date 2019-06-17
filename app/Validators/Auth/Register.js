@@ -7,8 +7,8 @@ class Register {
 
   get rules() {
     return {
-      name: 'required',
-      surname: 'required',
+      name: 'required|string',
+      surname: 'required|string',
       email: 'required|email|unique:users,email',
       password: 'required|confirmed'
     }
@@ -17,7 +17,9 @@ class Register {
   get messages() {
     return {
       'name.required': 'O nome é obrigatório!',
+      'name.string': 'O nome tem que ser um texto!',
       'surname.required': 'O sobrenome é obrigatório!',
+      'surname.string': 'O sobrenome tem que ser um texto!',
       'email.required': 'O email é obrigatório!',
       'email.email': 'O email é inválido!',
       'email.unique': 'Este email já existe!',
