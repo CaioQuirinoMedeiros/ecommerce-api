@@ -86,13 +86,20 @@ class OrderController {
    * @param {object} ctx.params
    */
   async show({ params, response, transform }) {
-    let order = await Order.findOrFail(params.id)
+    try {
+      let order = await Order.findOrFail(params.id)
 
-    order = await transform
-      .include('items,user,discounts')
-      .item(order, OrderTransformer)
+      order = await transform
+        .include('items,user,discounts')
+        .item(order, OrderTransformer)
 
-    return response.send(order)
+      return response.send(order)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível exibir o pedido' })
+    }
   }
 
   /**
@@ -161,16 +168,16 @@ class OrderController {
   }
 
   async applyDiscount({ params, request, response, transform }) {
-    const code = request.input('code')
-
-    const cupon = await Cupon.findByOrFail('code', code.toUpperCase())
-
-    let order = await Order.findOrFail(params.id)
-
-    let discount,
-      info = {}
-
     try {
+      const code = request.input('code')
+
+      const cupon = await Cupon.findByOrFail('code', code.toUpperCase())
+
+      let order = await Order.findOrFail(params.id)
+
+      let discount,
+        info = {}
+
       const service = new OrderService(order)
 
       const canAddDiscount = service.canApplyDiscount(cupon)
@@ -188,7 +195,14 @@ class OrderController {
 
         info.message = 'Cupon aplicado com sucesso'
         info.success = true
+      } else {
+        info.message = 'Não foi possível aplicar o cupon'
+        info.success = false
       }
+
+      await order.save()
+
+      order = await Order.find(order.id)
 
       order = await transform
         .include('items,user,discounts,cupons')
@@ -196,7 +210,8 @@ class OrderController {
 
       return response.status(200).send({ order, info })
     } catch (err) {
-      info.message = 'Não foi possível aplicar esse cupon'
+      console.log(err)
+      info.message = 'Erro ao aplicar o cupon'
       info.success = false
 
       return response.status(400).send(info)
