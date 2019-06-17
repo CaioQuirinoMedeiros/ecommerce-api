@@ -88,9 +88,9 @@ class OrderController {
   async show({ params, response, transform }) {
     let order = await Order.findOrFail(params.id)
 
-    await order.load('user')
-
-    order = await transform.item(order, OrderTransformer)
+    order = await transform
+      .include('items,user,discounts')
+      .item(order, OrderTransformer)
 
     return response.send(order)
   }
@@ -119,7 +119,9 @@ class OrderController {
 
       await trx.commit()
 
-      order = await transform.item(order, OrderTransformer)
+      order = await transform
+        .include('items,user,discounts,cupons')
+        .item(order, OrderTransformer)
 
       return response.status(200).send(order)
     } catch (err) {
@@ -158,12 +160,12 @@ class OrderController {
     }
   }
 
-  async applyDiscount({ params, request, response }) {
+  async applyDiscount({ params, request, response, transform }) {
     const code = request.input('code')
 
     const cupon = await Cupon.findByOrFail('code', code.toUpperCase())
 
-    const order = await Order.findOrFail(params.id)
+    let order = await Order.findOrFail(params.id)
 
     let discount,
       info = {}
@@ -187,6 +189,10 @@ class OrderController {
         info.message = 'Cupon aplicado com sucesso'
         info.success = true
       }
+
+      order = await transform
+        .include('items,user,discounts,cupons')
+        .item(order, OrderTransformer)
 
       return response.status(200).send({ order, info })
     } catch (err) {
