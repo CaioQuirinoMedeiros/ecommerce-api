@@ -21,7 +21,7 @@ class ProductTransformer extends BumblebeeTransformer {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: product.price
+      price: parseFloat(product.price).toFixed(2)
     }
   }
 

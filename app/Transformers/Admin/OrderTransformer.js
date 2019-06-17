@@ -2,9 +2,9 @@
 
 const BumblebeeTransformer = use('Bumblebee/Transformer')
 const UserTransformer = use('App/Transformers/Admin/UserTransformer')
-const UserTransformer = use('App/Transformers/Admin/OrderItemTransformer')
-const UserTransformer = use('App/Transformers/Admin/CuponTransformer')
-const UserTransformer = use('App/Transformers/Admin/DiscountTransformer')
+const OrderItemTransformer = use('App/Transformers/Admin/OrderItemTransformer')
+const CuponTransformer = use('App/Transformers/Admin/CuponTransformer')
+const DiscountTransformer = use('App/Transformers/Admin/DiscountTransformer')
 
 /**
  * OrderTransformer class
@@ -24,7 +24,7 @@ class OrderTransformer extends BumblebeeTransformer {
     return {
       id: order.id,
       status: order.status,
-      total: order.total ? parseFloat(order.total.toFixed(2)) : 0,
+      total: order.total ? parseFloat(order.total).toFixed(2) : 0,
       date: order.created_at,
       discount:
         order.__meta__ && order.__meta__.discount ? order.__meta__.discount : 0,
