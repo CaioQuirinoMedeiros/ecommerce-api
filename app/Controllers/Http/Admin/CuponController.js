@@ -26,11 +26,18 @@ class CuponController {
       query.where('code', 'iLIKE', `%${code}%`)
     }
 
-    let cupons = query.paginate(page, limit)
+    try {
+      let cupons = await query.paginate(page, limit)
 
-    cupons = await transform.paginate(cupons, CuponTransformer)
+      cupons = await transform.paginate(cupons, CuponTransformer)
 
-    return response.status(200).send(cupons)
+      return response.status(200).send(cupons)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar os cupons' })
+    }
   }
 
   /**
@@ -65,15 +72,18 @@ class CuponController {
       const service = new Service(cupon, trx)
 
       if (products && products.length) {
-        await service.syncProducts(products)
-        cupon.can_use_for = 'product'
+        const productsAdded = await service.syncProducts(products)
+        if (productsAdded) cupon.can_use_for = 'product'
       }
 
       if (users && users.length) {
-        await service.syncUsers(users)
-        cupon.can_use_for =
-          cupon.can_use_for === 'product' ? 'product_client' : 'client'
+        const clientsAdded = await service.syncUsers(users)
+        if (clientsAdded)
+          cupon.can_use_for =
+            cupon.can_use_for === 'product' ? 'product_client' : 'client'
       }
+
+      await cupon.save(trx)
 
       await trx.commit()
 
@@ -84,10 +94,10 @@ class CuponController {
       return response.status(201).send(cupon)
     } catch (err) {
       await trx.rollback()
-      console.log(err)
 
-      return response.status(400).send({ err })
-      // .send({ message: 'Não foi possível criar o cupon' })
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível criar o cupon' })
     }
   }
 
@@ -96,14 +106,21 @@ class CuponController {
    * @param {Response} ctx.response
    * @param {object} ctx.params
    */
-  async show({ params, response }) {
-    let cupon = await Cupon.findOrFail(params.id)
+  async show({ params, response, transform }) {
+    try {
+      let cupon = await Cupon.findOrFail(params.id)
 
-    cupon = await transform
-      .include('users,products,orders')
-      .item(cupon, CuponTransformer)
+      cupon = await transform
+        .include('users,products')
+        .item(cupon, CuponTransformer)
 
-    return response.send(cupon)
+      return response.send(cupon)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível encontrar o cupon' })
+    }
   }
 
   /**
@@ -117,8 +134,6 @@ class CuponController {
 
     const trx = await Database.beginTransaction()
 
-    let can_use_for = cupon.can_use_for
-
     try {
       const cuponData = request.only([
         'code',
@@ -130,21 +145,27 @@ class CuponController {
         'recursive'
       ])
 
+      cupon.merge({ ...cuponData })
+
       const { users, products } = request.only(['users', 'products'])
 
-      const service = new Service(Cupon, trx)
+      const service = new Service(cupon, trx)
 
       if (products && products.length) {
-        await service.syncProducts(products)
-        can_use_for = can_use_for === 'client' ? 'product_client' : 'product'
+        const productsAdded = await service.syncProducts(products)
+        if (productsAdded)
+          cupon.can_use_for = cupon.can_use_for.includes('client')
+            ? 'product_client'
+            : 'product'
       }
 
       if (users && users.length) {
-        await service.syncUsers(users)
-        can_use_for = can_use_for === 'product' ? 'product_client' : 'client'
+        const clientsAdded = await service.syncUsers(users)
+        if (clientsAdded)
+          cupon.can_use_for = cupon.can_use_for.includes('product')
+            ? 'product_client'
+            : 'client'
       }
-
-      cupon.merge({ ...cuponData, can_use_for })
 
       await cupon.save(trx)
 
@@ -154,8 +175,9 @@ class CuponController {
         .include('users,products')
         .item(cupon, CuponTransformer)
 
-      return response.status(201).send(cupon)
+      return response.status(200).send(cupon)
     } catch (err) {
+      console.log(err)
       await trx.rollback()
 
       return response

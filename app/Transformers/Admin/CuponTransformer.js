@@ -26,7 +26,9 @@ class CuponTransformer extends BumblebeeTransformer {
       quantity: cupon.quantity,
       type: cupon.type,
       can_use_for: cupon.can_use_for,
-      recursive: cupon.recursive
+      recursive: cupon.recursive,
+      valid_until: cupon.valid_until,
+      valid_from: cupon.valid_from
     }
   }
 
