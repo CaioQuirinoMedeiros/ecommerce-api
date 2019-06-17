@@ -10,6 +10,8 @@ const OrderService = use('App/Services/Order/OrderService')
 const Cupon = use('App/Models/Cupon')
 const Discount = use('App/Models/Discount')
 
+const OrderTransformer = use('App/Transformers/Admin/OrderTransformer')
+
 class OrderController {
   /**
    * @param {object} ctx
@@ -17,7 +19,7 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {object} ctx.pagination
    */
-  async index({ request, response, pagination }) {
+  async index({ request, response, pagination, transform }) {
     const { page, limit } = pagination
     const status = request.input('status')
 
@@ -27,9 +29,11 @@ class OrderController {
       query.where('status', status)
     }
 
-    const orders = await Order.query()
+    let orders = await Order.query()
       .orderBy('id', 'DESC')
       .paginate(page, limit)
+
+    orders = await transform.paginate(orders, OrderTransformer)
 
     return response.status(200).send(orders)
   }
@@ -39,13 +43,13 @@ class OrderController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store({ request, response }) {
+  async store({ request, response, transform }) {
     const trx = await Database.beginTransaction()
 
     try {
       const { user_id, items, status } = request.all()
 
-      const order = await Order.create(
+      let order = await Order.create(
         {
           user_id,
           status
@@ -60,6 +64,8 @@ class OrderController {
       }
 
       await trx.commit()
+
+      order = await transform.item(order, OrderTransformer)
 
       return response.status(201).send(order)
     } catch (err) {
@@ -77,10 +83,12 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {object} ctx.params
    */
-  async show({ params, response }) {
-    const order = await Order.findOrFail(params.id)
+  async show({ params, response, transform }) {
+    let order = await Order.findOrFail(params.id)
 
     await order.load('user')
+
+    order = await transform.item(order, OrderTransformer)
 
     return response.send(order)
   }
@@ -91,8 +99,8 @@ class OrderController {
    * @param {Response} ctx.response
    * @param {object} ctx.params
    */
-  async update({ params, request, response }) {
-    const order = await Order.findOrFail(params.id)
+  async update({ params, request, response, transform }) {
+    let order = await Order.findOrFail(params.id)
 
     const trx = await Database.beginTransaction()
 
@@ -108,6 +116,8 @@ class OrderController {
       await order.save(trx)
 
       await trx.commit()
+
+      order = await transform.item(order, OrderTransformer)
 
       return response.status(200).send(order)
     } catch (err) {
