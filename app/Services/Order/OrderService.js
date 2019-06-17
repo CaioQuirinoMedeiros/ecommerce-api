@@ -41,7 +41,7 @@ class OrderService {
     if (cupon.valid_until.getTime() && now > cupon.valid_until.getTime())
       return false
 
-    const cuponProductsIds = await Database.from('cupon_products')
+    const cuponProductsIds = await Database.from('cupon_product')
       .where('cupon_id', cupon.id)
       .pluck('product_id')
 
