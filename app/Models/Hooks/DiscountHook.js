@@ -14,34 +14,41 @@ DiscountHook.calculateValues = async model => {
 
   const cupon = await Cupon.findOrFail(model.cupon_id)
   const order = await Order.findOrFail(model.order_id)
+  console.log('***************CUPON****************')
+  console.log(cupon)
+  console.log('***************ORDER****************')
+  console.log(order)
 
-  switch (cupon.can_use_for) {
-    case 'product_client' || 'product':
-      cuponProductsIds = await Database.from('cupon_product')
-        .where('cupon_id', model.cupon_id)
-        .pluck('product_id')
-      discountItems = await Database.from('order_items')
-        .where('order_id', model.order_id)
-        .whereIn('product_id', cuponProductsIds)
+  console.log('***************CUPON_can_use_for****************')
+  console.log(cupon.can_use_for)
 
-      for (let orderItem of discountItems) {
-        model.discount +=
-          cupon.type === 'percentage'
-            ? ((cupon.discount / 100) * orderItem.subtotal) / 100
-            : cupon.type === 'currency'
-            ? cupon.discount * orderItem.quantity
-            : orderItem.subtotal
-      }
+  if (
+    cupon.can_use_for === 'product_client' ||
+    cupon.can_use_for === 'product'
+  ) {
+    cuponProductsIds = await Database.from('cupon_product')
+      .where('cupon_id', cupon.id)
+      .pluck('product_id')
 
-      break
-    default:
-      model.discount =
-        cupon.type === 'percentage'
-          ? order.subtotal * cupon.discount
+    discountItems = await Database.from('order_items')
+      .where('order_id', order.id)
+      .whereIn('product_id', cuponProductsIds)
+
+    for (let orderItem of discountItems) {
+      model.discount +=
+        cupon.type === 'percent'
+          ? cupon.discount * orderItem.subtotal
           : cupon.type === 'currency'
-          ? cupon.discount
-          : order.subtotal
-      break
+          ? cupon.discount * orderItem.quantity
+          : orderItem.subtotal
+    }
+  } else {
+    model.discount =
+      cupon.type === 'percent'
+        ? order.subtotal * cupon.discount
+        : cupon.type === 'currency'
+        ? cupon.discount
+        : order.subtotal
   }
 
   return model
