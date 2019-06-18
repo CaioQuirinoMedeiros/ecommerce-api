@@ -51,9 +51,9 @@ class OrderController {
   async store({ request, response, transform }) {
     const trx = await Database.beginTransaction()
 
-    try {
-      const { user_id, items, status } = request.all()
+    const { user_id, items, status } = request.all()
 
+    try {
       let order = await Order.create(
         {
           user_id,
@@ -101,7 +101,7 @@ class OrderController {
         .include('items,user,discounts')
         .item(order, OrderTransformer)
 
-      return response.send(order)
+      return response.status(200).send(order)
     } catch (err) {
       console.log(err)
       return response
@@ -128,7 +128,7 @@ class OrderController {
 
       const service = new OrderService(order, trx)
 
-      await service.updateItems(items)
+      await service.syncItems(items)
 
       await order.save(trx)
 
@@ -240,7 +240,7 @@ class OrderController {
     } catch (err) {
       console.log(err)
       return response
-        .status(500)
+        .status(400)
         .send({ message: 'Não foi possível remover o desconto' })
     }
   }
