@@ -2,33 +2,60 @@
 
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
-/** @typedef {import('@adonisjs/framework/src/View')} View */
 
-/**
- * Resourceful controller for interacting with products
- */
+const Product = use('App/Models/Product')
+const ProductTransformer = use('App/Transformers/Admin/ProductTransformer')
+
 class ProductController {
   /**
-   * Show a list of all products.
-   * GET products
-   *
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {View} ctx.view
+   * @param {object} ctx.pagination
    */
-  async index({ request, response, view }) {}
+  async index({ request, response, pagination, transform }) {
+    const name = request.input('name')
+    const { page, limit } = pagination
+
+    const query = Product.query()
+
+    if (name) {
+      query.where('name', 'iLIKE', `%${name}%`)
+    }
+
+    try {
+      let products = await query.paginate(page, limit)
+
+      products = await transform.paginate(products, ProductTransformer)
+
+      return response.status(200).send(products)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar os produtos' })
+    }
+  }
 
   /**
-   * Display a single product.
-   * GET products/:id
-   *
    * @param {object} ctx
-   * @param {Request} ctx.request
+   * @param {object} ctx.params
    * @param {Response} ctx.response
-   * @param {View} ctx.view
    */
-  async show({ params, request, response, view }) {}
+  async show({ params, response, transform }) {
+    try {
+      let product = await Product.findOrFail(params.id)
+
+      product = await transform.item(product, ProductTransformer)
+
+      return response.status(200).send(product)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível encontrar o produto' })
+    }
+  }
 }
 
 module.exports = ProductController
