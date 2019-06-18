@@ -21,3 +21,7 @@ require('./auth')
 require('./admin')
 
 require('./client')
+
+Route.get('v1/me', 'UserController.me')
+  .as('me')
+  .middleware('auth')

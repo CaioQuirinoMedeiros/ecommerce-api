@@ -51,6 +51,11 @@ Route.group(() => {
     .validator(
       new Map([[['users.store', 'users.update'], ['Admin/StoreUser']]])
     )
+
+  /**
+   * Dashboard
+   */
+  Route.get('dashboard', 'DashboardController.index').as('dashboard')
 })
   .prefix('v1/admin')
   .namespace('Admin')
