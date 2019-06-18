@@ -10,7 +10,7 @@ const ProductTransformer = use('App/Transformers/Admin/ProductTransformer')
  * @constructor
  */
 class OrderItemTransformer extends BumblebeeTransformer {
-  static get defaltInclude() {
+  static get defaultInclude() {
     return ['product']
   }
   /**
