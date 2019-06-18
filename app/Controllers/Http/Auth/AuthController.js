@@ -19,7 +19,7 @@ class AuthController {
 
       await trx.commit()
 
-      return response.status(201).send(user)
+      return response.status(201).send({ data: user })
     } catch (err) {
       await trx.rollback()
 
@@ -32,7 +32,7 @@ class AuthController {
 
     const token = await auth.withRefreshToken().attempt(email, password)
 
-    return response.send(token)
+    return response.send({ data: token })
   }
 
   async refresh({ request, response, auth }) {
