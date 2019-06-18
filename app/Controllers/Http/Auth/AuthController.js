@@ -3,6 +3,7 @@
 const Database = use('Database')
 const User = use('App/Models/User')
 const Role = use('Role')
+const Ws = use('Ws')
 
 class AuthController {
   async register({ request, response }) {
@@ -18,6 +19,10 @@ class AuthController {
       await user.roles().attach([clientRole.id], null, trx)
 
       await trx.commit()
+
+      const topic = Ws.getChannel('notifications').topic('notifications')
+
+      if (topic) topic.broadcast('new:user')
 
       return response.status(201).send({ data: user })
     } catch (err) {
