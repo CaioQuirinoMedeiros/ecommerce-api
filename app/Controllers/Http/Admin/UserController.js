@@ -11,7 +11,7 @@ class UserController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {Pagination} ctx.pagination
+   * @param {object} ctx.pagination
    */
   async index({ request, response, pagination, transform }) {
     const name = request.input('name')
@@ -25,11 +25,18 @@ class UserController {
       query.orWhere('email', 'iLIKE', `%${name}%`)
     }
 
-    let users = await query.paginate(page, limit)
+    try {
+      let users = await query.paginate(page, limit)
 
-    users = await transform.paginate(users, UserTransformer)
+      users = await transform.paginate(users, UserTransformer)
 
-    return response.send(users)
+      return response.status(200).send(users)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar os usuários' })
+    }
   }
 
   /**
@@ -38,9 +45,9 @@ class UserController {
    * @param {Response} ctx.response
    */
   async store({ request, response, transform }) {
-    try {
-      const { name, surname, email, password, image_id } = request.all()
+    const { name, surname, email, password, image_id } = request.all()
 
+    try {
       let user = await User.create({
         name,
         surname,
@@ -55,28 +62,35 @@ class UserController {
     } catch (err) {
       return response
         .status(400)
-        .send({ message: 'Erro ao processar solicitação' })
+        .send({ message: 'Não foi possível criar o usuário' })
     }
   }
 
   /**
    * @param {object} ctx
-   * @param {Params} ctx.params
+   * @param {object} ctx.params
    * @param {Response} ctx.response
    */
   async show({ params, response, transform }) {
-    let user = await User.findOrFail(params.id)
+    try {
+      let user = await User.findOrFail(params.id)
 
-    user = await transform.item(user, UserTransformer)
+      user = await transform.item(user, UserTransformer)
 
-    return response.send(user)
+      return response.status(200).send(user)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível encontrar o usuário' })
+    }
   }
 
   /**
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {Params} ctx.params
+   * @param {object} ctx.params
    */
   async update({ params, request, response, transform }) {
     try {
@@ -93,25 +107,26 @@ class UserController {
     } catch (err) {
       return response
         .status(400)
-        .send({ message: 'Erro ao processar solicitação' })
+        .send({ message: 'Não foi possível editar o usuário' })
     }
   }
 
   /**
    * @param {object} ctx
    * @param {Response} ctx.response
+   * @param {object} ctx.params
    */
   async destroy({ params, response }) {
-    const user = await User.findOrFail(params.id)
-
     try {
+      const user = await User.findOrFail(params.id)
+
       await user.delete()
 
       return response.status(204).send()
     } catch (err) {
       return response
-        .status(500)
-        .send({ message: 'Não foi possível deletar o produto' })
+        .status(400)
+        .send({ message: 'Não foi possível deletar o usuário' })
     }
   }
 }

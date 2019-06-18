@@ -11,7 +11,7 @@ class ProductController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {Pagination} ctx.pagination
+   * @param {object} ctx.pagination
    */
   async index({ request, response, pagination, transform }) {
     const name = request.input('name')
@@ -23,11 +23,18 @@ class ProductController {
       query.where('name', 'iLIKE', `%${name}%`)
     }
 
-    let products = await query.paginate(page, limit)
+    try {
+      let products = await query.paginate(page, limit)
 
-    products = await transform.paginate(products, ProductTransformer)
+      products = await transform.paginate(products, ProductTransformer)
 
-    return response.status(200).send(products)
+      return response.status(200).send(products)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar os produtos' })
+    }
   }
 
   /**
@@ -36,9 +43,9 @@ class ProductController {
    * @param {Response} ctx.response
    */
   async store({ request, response, transform }) {
-    try {
-      const { name, description, price, image_id } = request.all()
+    const { name, description, price, image_id } = request.all()
 
+    try {
       let product = await Product.create({
         name,
         description,
@@ -50,38 +57,47 @@ class ProductController {
 
       return response.status(201).send(product)
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
-        .send({ message: 'Erro ao processar solicitação' })
+        .send({ message: 'Não foi possível criar o produto' })
     }
   }
 
   /**
    * @param {object} ctx
-   * @param {Params} ctx.params
+   * @param {object} ctx.params
    * @param {Response} ctx.response
    */
   async show({ params, response, transform }) {
-    let product = await Product.findOrFail(params.id)
+    try {
+      let product = await Product.findOrFail(params.id)
 
-    product = await transform.item(product, ProductTransformer)
+      product = await transform.item(product, ProductTransformer)
 
-    return response.send(product)
+      return response.status(200).send(product)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível encontrar o produto' })
+    }
   }
 
   /**
    * @param {object} ctx
    * @param {Request} ctx.request
-   * @param {Params} ctx.params
+   * @param {object} ctx.params
    */
   async destroy({ params, response }) {
-    const product = await Product.findOrFail(params.id)
-
     try {
+      const product = await Product.findOrFail(params.id)
+
       await product.delete()
 
       return response.status(204).send()
     } catch (err) {
+      console.log(err)
       return response
         .status(500)
         .send({ message: 'Não foi possível deletar o produto' })
@@ -92,11 +108,12 @@ class ProductController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {Params} ctx.params
+   * @param {object} ctx.params
    */
   async update({ params, request, response, transform }) {
+    const { name, description, price, image_id } = request.all()
+
     try {
-      const { name, description, price, image_id } = request.all()
       let product = await Product.findOrFail(params.id)
 
       product.merge({ name, description, price, image_id })
@@ -105,11 +122,12 @@ class ProductController {
 
       product = await transform.item(product, ProductTransformer)
 
-      return response.status(201).send(product)
+      return response.status(200).send(product)
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
-        .send({ message: 'Erro ao processar solicitação' })
+        .send({ message: 'Não foi possível editar o produto' })
     }
   }
 }

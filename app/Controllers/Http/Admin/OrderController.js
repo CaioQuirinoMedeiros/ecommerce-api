@@ -29,11 +29,18 @@ class OrderController {
       query.where('status', status)
     }
 
-    let orders = await query.paginate(page, limit)
+    try {
+      let orders = await query.paginate(page, limit)
 
-    orders = await transform.paginate(orders, OrderTransformer)
+      orders = await transform.paginate(orders, OrderTransformer)
 
-    return response.status(200).send(orders)
+      return response.status(200).send(orders)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar os pedidos' })
+    }
   }
 
   /**
@@ -71,6 +78,7 @@ class OrderController {
 
       return response.status(201).send(order)
     } catch (err) {
+      console.log(err)
       await trx.rollback()
 
       return response
@@ -109,12 +117,12 @@ class OrderController {
    * @param {object} ctx.params
    */
   async update({ params, request, response, transform }) {
-    let order = await Order.findOrFail(params.id)
-
     const trx = await Database.beginTransaction()
 
+    const { user_id, items, status } = request.all()
+
     try {
-      const { user_id, items, status } = request.all()
+      let order = await Order.findOrFail(params.id)
 
       order.merge({ user_id, status })
 
@@ -132,11 +140,12 @@ class OrderController {
 
       return response.status(200).send(order)
     } catch (err) {
+      console.log(err)
       await trx.rollback()
 
       return response
         .status(400)
-        .send({ message: 'Não foi possível atualizar o pedido' })
+        .send({ message: 'Não foi possível editar o pedido' })
     }
   }
 
@@ -146,11 +155,11 @@ class OrderController {
    * @param {Response} ctx.response
    */
   async destroy({ params, response }) {
-    const order = await Order.findOrFail(params.id)
-
     const trx = await Database.beginTransaction()
 
     try {
+      const order = await Order.findOrFail(params.id)
+
       await order.items().delete(trx)
       await order.cupons().delete(trx)
       await order.delete(trx)
@@ -159,24 +168,25 @@ class OrderController {
 
       return response.status(204).send()
     } catch (err) {
+      console.log(err)
       await trx.rollback()
 
       return response
-        .status(500)
+        .status(400)
         .send({ message: 'Não foi possível deletar o pedido' })
     }
   }
 
   async applyDiscount({ params, request, response, transform }) {
-    try {
-      const code = request.input('code')
+    const code = request.input('code')
 
+    let discount,
+      info = {}
+
+    try {
       const cupon = await Cupon.findByOrFail('code', code.toUpperCase())
 
       let order = await Order.findOrFail(params.id)
-
-      let discount,
-        info = {}
 
       const service = new OrderService(order)
 
@@ -228,6 +238,7 @@ class OrderController {
 
       return response.status(204).send()
     } catch (err) {
+      console.log(err)
       return response
         .status(500)
         .send({ message: 'Não foi possível remover o desconto' })

@@ -46,28 +46,24 @@ class CuponController {
    * @param {Response} ctx.response
    */
   async store({ request, response, transform }) {
-    /**
-     * Relationships: products, clients, products and clients, anyone and anyproduct
-     */
-
     const trx = await Database.beginTransaction()
+
+    const cuponData = request.only([
+      'code',
+      'discount',
+      'valid_from',
+      'valid_until',
+      'quantity',
+      'type',
+      'recursive'
+    ])
+
+    const { users, products } = request.only(['users', 'products'])
 
     let can_use_for = 'all'
 
     try {
-      const cuponData = request.only([
-        'code',
-        'discount',
-        'valid_from',
-        'valid_until',
-        'quantity',
-        'type',
-        'recursive'
-      ])
-
       let cupon = await Cupon.create({ ...cuponData, can_use_for }, trx)
-
-      const { users, products } = request.only(['users', 'products'])
 
       const service = new CuponService(cupon, trx)
 
@@ -95,6 +91,7 @@ class CuponController {
 
       return response.status(201).send(cupon)
     } catch (err) {
+      console.log(err)
       await trx.rollback()
 
       return response
@@ -116,8 +113,9 @@ class CuponController {
         .include('users,products')
         .item(cupon, CuponTransformer)
 
-      return response.send(cupon)
+      return response.status(200).send(cupon)
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
         .send({ message: 'Não foi possível encontrar o cupon' })
@@ -131,24 +129,24 @@ class CuponController {
    * @param {object} ctx.params
    */
   async update({ params, request, response, transform }) {
-    let cupon = await Cupon.findOrFail(params.id)
-
     const trx = await Database.beginTransaction()
 
+    const cuponData = request.only([
+      'code',
+      'discount',
+      'valid_from',
+      'valid_until',
+      'quantity',
+      'type',
+      'recursive'
+    ])
+
+    const { users, products } = request.only(['users', 'products'])
+
     try {
-      const cuponData = request.only([
-        'code',
-        'discount',
-        'valid_from',
-        'valid_until',
-        'quantity',
-        'type',
-        'recursive'
-      ])
+      let cupon = await Cupon.findOrFail(params.id)
 
-      cupon.merge({ ...cuponData })
-
-      const { users, products } = request.only(['users', 'products'])
+      cupon.merge(cuponData)
 
       const service = new CuponService(cupon, trx)
 
@@ -178,6 +176,8 @@ class CuponController {
 
       return response.status(200).send(cupon)
     } catch (err) {
+      console.log(err)
+
       await trx.rollback()
 
       return response
@@ -193,9 +193,10 @@ class CuponController {
    */
   async destroy({ params, response }) {
     const trx = await Database.beginTransaction()
-    const cupon = await Cupon.findOrFail(params.id)
 
     try {
+      const cupon = await Cupon.findOrFail(params.id)
+
       await cupon.products().detach([], trx)
       await cupon.orders().detach([], trx)
       await cupon.users().detach([], trx)
@@ -206,10 +207,11 @@ class CuponController {
 
       return response.status(204).send()
     } catch (err) {
+      console.log(err)
       trx.rollback()
 
       return response
-        .status(500)
+        .status(400)
         .send({ message: 'Não foi possível deletar o cupon' })
     }
   }

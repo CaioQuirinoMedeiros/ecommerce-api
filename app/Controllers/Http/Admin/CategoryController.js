@@ -11,8 +11,7 @@ class CategoryController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {Pagination} ctx.pagination
-   * @param {TransformWith} ctx.transform
+   * @param {object} ctx.pagination
    */
   async index({ request, response, transform, pagination }) {
     const title = request.input('title')
@@ -24,30 +23,39 @@ class CategoryController {
       query.where('title', 'iLIKE', `%${title}%`)
     }
 
-    let categories = await query.paginate(page, limit)
-    categories = await transform.paginate(categories, CategoryTransformer)
+    try {
+      let categories = await query.paginate(page, limit)
 
-    return response.status(200).send(categories)
+      categories = await transform.paginate(categories, CategoryTransformer)
+
+      return response.status(200).send(categories)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar as categorias' })
+    }
   }
 
   /**
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
-   * @param {TransformWith} ctx.transform
    */
   async store({ request, response, transform }) {
-    try {
-      const { title, description, image_id } = request.all()
+    const { title, description, image_id } = request.all()
 
+    try {
       let category = await Category.create({ title, description, image_id })
+
       category = await transform.item(category, CategoryTransformer)
 
       return response.status(201).send(category)
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
-        .send({ message: 'Erro ao processar solicitação' })
+        .send({ message: 'Não foi possível criar a categoria' })
     }
   }
 
@@ -55,16 +63,20 @@ class CategoryController {
    * @param {object} ctx
    * @param {Params} ctx.params
    * @param {Response} ctx.response
-   * @param {TransformWith} ctx.transform
    */
   async show({ params, response, transform }) {
-    let category = await Category.findOrFail(params.id)
+    try {
+      let category = await Category.findOrFail(params.id)
 
-    // await category.load('products')
+      category = await transform.item(category, CategoryTransformer)
 
-    category = await transform.item(category, CategoryTransformer)
-
-    return response.send(category)
+      return response.status(200).send(category)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível encontrar a categoria' })
+    }
   }
 
   /**
@@ -73,15 +85,16 @@ class CategoryController {
    * @param {Response} ctx.response
    */
   async destroy({ params, response }) {
-    const category = await Category.findOrFail(params.id)
-
     try {
+      const category = await Category.findOrFail(params.id)
+
       await category.delete()
 
       return response.status(204).send()
     } catch (err) {
+      console.log(err)
       return response
-        .status(500)
+        .status(400)
         .send({ message: 'Não foi possível deletar a categoria' })
     }
   }
@@ -91,11 +104,11 @@ class CategoryController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    * @param {Params} ctx.params
-   * @param {TransformWith} ctx.transform
    */
   async update({ params, request, response, transform }) {
+    const { title, description, image_id } = request.all()
+
     try {
-      const { title, description, image_id } = request.all()
       let category = await Category.findOrFail(params.id)
 
       category.merge({ title, description, image_id })
@@ -104,11 +117,12 @@ class CategoryController {
 
       category = await transform.item(category, CategoryTransformer)
 
-      return response.status(201).send(category)
+      return response.status(200).send(category)
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
-        .send({ message: 'Erro ao processar solicitação' })
+        .send({ message: 'Não foi possível editar a categoria' })
     }
   }
 }

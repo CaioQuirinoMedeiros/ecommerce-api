@@ -13,7 +13,6 @@ class ImageController {
    * @param {object} ctx
    * @param {Response} ctx.response
    * @param {object} ctx.pagination
-   * @param {TransformWith} ctx.transform
    */
   async index({ response, pagination, transform }) {
     const { page, limit } = pagination
@@ -22,9 +21,16 @@ class ImageController {
       .orderBy('id', 'DESC')
       .paginate(page, limit)
 
-    images = await transform.paginate(images, ImageTransformer)
+    try {
+      images = await transform.paginate(images, ImageTransformer)
 
-    return response.status(200).send(images)
+      return response.status(200).send(images)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível buscar as imagens' })
+    }
   }
 
   /**
@@ -33,14 +39,14 @@ class ImageController {
    * @param {Response} ctx.response
    */
   async store({ request, response, transform }) {
+    const fileJar = request.file('images', {
+      types: ['image'],
+      size: '2mb'
+    })
+
+    let images = []
+
     try {
-      const fileJar = request.file('images', {
-        types: ['image'],
-        size: '2mb'
-      })
-
-      let images = []
-
       if (!fileJar.files) {
         const file = await manage_single_upload(fileJar)
 
@@ -85,6 +91,7 @@ class ImageController {
         .status(201)
         .send({ successes: images, errors: files.errors })
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
         .send({ message: 'Não foi possível processar a solicitação' })
@@ -97,11 +104,18 @@ class ImageController {
    * @param {Response} ctx.response
    */
   async show({ params, response, transform }) {
-    let image = await Image.findOrFail(params.id)
+    try {
+      let image = await Image.findOrFail(params.id)
 
-    image = await transform.item(image, ImageTransformer)
+      image = await transform.item(image, ImageTransformer)
 
-    return response.send(image)
+      return response.status(200).send(image)
+    } catch (err) {
+      console.log(err)
+      return response
+        .status(400)
+        .send({ message: 'Não foi possível encontrar a imagem' })
+    }
   }
 
   /**
@@ -111,10 +125,10 @@ class ImageController {
    * @param {object} ctx.params
    */
   async update({ params, request, response, transform }) {
-    let image = await Image.findOrFail(params.id)
+    const original_name = request.input('original_name')
 
     try {
-      const original_name = request.input('original_name')
+      let image = await Image.findOrFail(params.id)
 
       image.merge({ original_name })
 
@@ -124,9 +138,10 @@ class ImageController {
 
       return response.status(200).send(image)
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
-        .send({ message: 'Não foi possível atualizar a imagem' })
+        .send({ message: 'Não foi possível editar a imagem' })
     }
   }
 
@@ -136,9 +151,9 @@ class ImageController {
    * @param {object} ctx.params
    */
   async destroy({ params, response }) {
-    const image = Image.findOrFail(params.id)
-
     try {
+      const image = Image.findOrFail(params.id)
+
       let filePath = Helpers.publicPath(`uploads/${image.path}`)
 
       await fs.unlink(filePath, async err => {
@@ -148,7 +163,7 @@ class ImageController {
       return response.status(204).send()
     } catch (err) {
       return response
-        .status(500)
+        .status(400)
         .send({ message: 'Não foi possível deletar a imagem' })
     }
   }
