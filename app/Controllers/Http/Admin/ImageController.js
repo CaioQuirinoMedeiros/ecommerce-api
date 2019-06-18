@@ -153,13 +153,17 @@ class ImageController {
    */
   async destroy({ params, response }) {
     try {
-      const image = Image.findOrFail(params.id)
+      const image = await Image.findOrFail(params.id)
 
       let filePath = Helpers.publicPath(`uploads/${image.path}`)
 
-      await fs.unlink(filePath, async err => {
-        if (!err) await image.delete()
+      await fs.unlink(filePath, err => {
+        if (err) throw Error
       })
+
+      console.log(image)
+
+      await image.delete()
 
       return response.status(204).send()
     } catch (err) {

@@ -25,3 +25,5 @@ require('./client')
 Route.get('v1/me', 'UserController.me')
   .as('me')
   .middleware('auth')
+
+Route.get('images/:path', 'ImageController.download')
