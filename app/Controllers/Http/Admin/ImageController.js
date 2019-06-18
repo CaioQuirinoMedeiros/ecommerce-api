@@ -7,6 +7,7 @@ const Image = use('App/Models/Image')
 const { manage_single_upload, manage_multiple_upload } = use('App/Helpers')
 const fs = use('fs')
 const ImageTransformer = use('App/Transformers/Admin/ImageTransformer')
+const Helpers = use('Helpers')
 
 class ImageController {
   /**
@@ -81,11 +82,11 @@ class ImageController {
             extension: file.subtype
           })
 
-          const transformedImage = await transform.item(image, ImageTransformer)
-
-          images.push(transformedImage)
+          images.push(image)
         })
       )
+
+      images = await transform.collection(images, ImageTransformer)
 
       return response
         .status(201)
@@ -162,6 +163,7 @@ class ImageController {
 
       return response.status(204).send()
     } catch (err) {
+      console.log(err)
       return response
         .status(400)
         .send({ message: 'Não foi possível deletar a imagem' })
