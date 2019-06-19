@@ -16,6 +16,14 @@
 /** @type {typeof import('@adonisjs/framework/src/Route/Manager')} */
 const Route = use('Route')
 
-Route.get('/', () => {
-  return { greeting: 'Hello world in JSON' }
-})
+require('./auth')
+
+require('./admin')
+
+require('./client')
+
+Route.get('v1/me', 'UserController.me')
+  .as('me')
+  .middleware('auth')
+
+Route.get('images/:path', 'ImageController.download')
