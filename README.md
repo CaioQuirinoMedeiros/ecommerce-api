@@ -1,23 +1,10 @@
-# Adonis API application
+# Ecommerce API application
 
-This is the boilerplate for creating an API server in AdonisJs, it comes pre-configured with.
-
-1. Bodyparser
-2. Authentication
-3. CORS
-4. Lucid ORM
-5. Migrations and seeds
+This is a ecommerce api application. it supports create categories and products with images, discount cupons - with restrictions - and, obviously, orders by clients
 
 ## Setup
 
-Use the adonis command to install the blueprint
-
-```bash
-adonis new yardstick --api-only
-```
-
-or manually clone the repo and then run `npm install`.
-
+clone the repo, set up the .env file and then run `npm install`.
 
 ### Migrations
 
