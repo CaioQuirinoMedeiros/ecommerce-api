@@ -11,18 +11,20 @@ const Logger = use('Logger')
  */
 class ExceptionHandler extends BaseExceptionHandler {
   /**
-   * Handle exception thrown during the HTTP lifecycle
-   *
    * @method handle
-   *
    * @param  {Object} error
    * @param  {Object} options.request
    * @param  {Object} options.response
-   *
    * @return {void}
    */
   async handle(error, { request, response }) {
-    response.status(error.status).send(error.message)
+    if (error.name === 'ValidationException') {
+      return response.status(error.status).send({
+        errors: error.messages
+      })
+    }
+
+    response.status(error.status).send(error)
   }
 
   /**
