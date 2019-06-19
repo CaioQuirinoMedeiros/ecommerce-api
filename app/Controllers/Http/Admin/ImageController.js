@@ -161,8 +161,6 @@ class ImageController {
         if (err) throw Error
       })
 
-      console.log(image)
-
       await image.delete()
 
       return response.status(204).send()

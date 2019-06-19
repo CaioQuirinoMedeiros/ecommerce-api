@@ -2,6 +2,7 @@
 
 const BumblebeeTransformer = use('Bumblebee/Transformer')
 const ImageTransformer = use('App/Transformers/Admin/ImageTransformer')
+const CategoryTransformer = use('App/Transformers/Admin/CategoryTransformer')
 
 /**
  * ProductTransformer class
@@ -11,7 +12,7 @@ const ImageTransformer = use('App/Transformers/Admin/ImageTransformer')
  */
 class ProductTransformer extends BumblebeeTransformer {
   static get defaultInclude() {
-    return ['image']
+    return ['image', 'categories']
   }
   /**
    * This method is used to transform the data.
@@ -27,6 +28,13 @@ class ProductTransformer extends BumblebeeTransformer {
 
   includeImage(product) {
     return this.item(product.getRelated('image'), ImageTransformer)
+  }
+
+  includeCategories(product) {
+    return this.collection(
+      product.getRelated('categories'),
+      CategoryTransformer
+    )
   }
 }
 

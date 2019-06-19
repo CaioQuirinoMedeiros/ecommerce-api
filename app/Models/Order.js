@@ -10,6 +10,7 @@ class Order extends Model {
     this.addHook('afterFind', 'OrderHook.updateValues')
     this.addHook('afterPaginate', 'OrderHook.updateCollectionValues')
   }
+  
   items() {
     return this.hasMany('App/Models/OrderItem')
   }
