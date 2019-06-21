@@ -4,7 +4,7 @@ This is a ecommerce api application. it supports create categories and products 
 
 ## Setup
 
-clone the repo, set up the .env file and then run `npm install`.
+Clone the repo, set up the .env file and then run `npm install`.
 
 ### Migrations
 
